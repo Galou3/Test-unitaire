@@ -2,14 +2,20 @@
  0) my_alpha_number_t
  *****************************************/
  const my_alpha_number_t = (nbr) => {
-  return `${nbr}`;
+
+  return String(nbr);
 };
 
 /*****************************************
  1) sum
  *****************************************/
 const sum = (a, b) => {
+
   if (typeof a !== 'number' || typeof b !== 'number') {
+    return 0;
+  }
+  // Gérer Infinity
+  if (!Number.isFinite(a) || !Number.isFinite(b)) {
     return 0;
   }
   return a + b;
@@ -19,11 +25,11 @@ const sum = (a, b) => {
  2) my_size_alpha_t
  *****************************************/
 const my_size_alpha_t = (str = '') => {
-  let count = 0;
   if (typeof str !== 'string') {
-    return count;
+    return 0;
   }
-  while(!!str[count]) {
+  let count = 0;
+  while (str[count] !== undefined) {
     count++;
   }
   return count;
@@ -38,8 +44,12 @@ const my_display_alpha_t = () => 'abcdefghijklmnopqrstuvwxyz';
  4) my_array_alpha_t
  *****************************************/
 const my_array_alpha_t = (str) => {
+
+  if (typeof str !== 'string') {
+    return [];
+  }
   const result = [];
-  for (let i = 0; i < my_size_alpha_t(str); i += 1) {
+  for (let i = 0; i < my_size_alpha_t(str); i++) {
     result[i] = str[i];
   }
   return result;
@@ -49,16 +59,22 @@ const my_array_alpha_t = (str) => {
  5) my_is_posi_neg_t
  *****************************************/
 const my_is_posi_neg_t = (nbr) => {
-  if (nbr <= 0) {
-    return 'NEGATIVE';
+
+  if (!Number.isFinite(nbr)) {
+    return (nbr === -Infinity) ? 'NEGATIVE' : 'POSITIF';
   }
-  return 'POSITIF';
+  return nbr <= 0 ? 'NEGATIVE' : 'POSITIF';
 };
 
 /*****************************************
  6) fibo
  *****************************************/
+
 const fibo = (n) => {
+  // Si pas un nombre, ou NaN, ou Infinity => on renvoie 0
+  if (typeof n !== 'number' || !Number.isFinite(n)) {
+    return 0;
+  }
   if (n <= 0) {
     return 0;
   }
@@ -72,7 +88,7 @@ const fibo = (n) => {
  7) my_display_alpha_reverse_t
  *****************************************/
 const my_display_alpha_reverse_t = () => {
-  const alpha = my_display_alpha_t(); // 'abcdefghijklmnopqrstuvwxyz'
+  const alpha = my_display_alpha_t(); 
   let reverseAlpha = '';
   for (let i = my_size_alpha_t(alpha); i > 0; i--) {
     reverseAlpha += alpha[i - 1];
@@ -84,8 +100,13 @@ const my_display_alpha_reverse_t = () => {
  8) my_length_array_t
  *****************************************/
 const my_length_array_t = (arr) => {
+
+  if (!Array.isArray(arr)) {
+    return 0;
+  }
+
   let i = 0;
-  while(!!arr[i]) {
+  for (let elem of arr) {
     i++;
   }
   return i;
@@ -98,19 +119,12 @@ const my_display_unicode_t = (arr) => {
   const results = [];
   for (let i = 0; i < arr.length; i++) {
     const decimal = arr[i];
-    // Lettres majuscules A-Z (65->90) ou minuscules a-z(97->122),
-    // Chiffres 0-9 (48->57), l'espace (32)
-    if ((decimal >= 65 && decimal <= 90)) {
-      results[i] = String.fromCharCode(arr[i]);
-    }
-    if ((decimal >= 97 && decimal <= 122)) {
-      results[i] = String.fromCharCode(arr[i]);
-    }
-    if ((decimal >= 48 && decimal <= 57)) {
-      results[i] = String.fromCharCode(arr[i]);
-    }
-    if (decimal === 32) {
-      results[i] = String.fromCharCode(arr[i]);
+
+    if ((decimal >= 65 && decimal <= 90) ||
+        (decimal >= 97 && decimal <= 122) ||
+        (decimal >= 48 && decimal <= 57) ||
+         decimal === 32) {
+      results.push(String.fromCharCode(decimal));
     }
   }
   return results.join('');
@@ -150,6 +164,12 @@ function permuter(arr) {
 
 function tspBrutForce(distances) {
   let villes = Object.keys(distances);
+
+  // Gérer le cas d'aucune ville
+  if (villes.length === 0) {
+    return { minDistance: Infinity, meilleurePermutation: [] };
+  }
+
   let permutations = permuter(villes);
   let minDistance = Infinity;
   let meilleurePermutation = [];
@@ -159,9 +179,10 @@ function tspBrutForce(distances) {
     for (let i = 0; i < chemin.length - 1; i++) {
       distanceTotale += distances[chemin[i]][chemin[i + 1]];
     }
+
     // Retour à la ville de départ
     distanceTotale += distances[chemin[chemin.length - 1]][chemin[0]];
-    
+
     if (distanceTotale < minDistance) {
       minDistance = distanceTotale;
       meilleurePermutation = chemin;
@@ -173,12 +194,51 @@ function tspBrutForce(distances) {
 /*****************************************
  12) resoudreSudoku
  *****************************************/
+
+function grilleEstCompleteEtValide(grille) {
+
+  for (let row = 0; row < 9; row++) {
+    const seen = new Set();
+    for (let col = 0; col < 9; col++) {
+      let val = grille[row][col];
+      if (val < 1 || val > 9) return false; 
+      if (seen.has(val)) return false;
+      seen.add(val);
+    }
+  }
+
+  for (let col = 0; col < 9; col++) {
+    const seen = new Set();
+    for (let row = 0; row < 9; row++) {
+      let val = grille[row][col];
+      if (seen.has(val)) return false;
+      seen.add(val);
+    }
+  }
+
+  for (let startRow = 0; startRow < 9; startRow += 3) {
+    for (let startCol = 0; startCol < 9; startCol += 3) {
+      const seen = new Set();
+      for (let r = startRow; r < startRow + 3; r++) {
+        for (let c = startCol; c < startCol + 3; c++) {
+          let val = grille[r][c];
+          if (seen.has(val)) return false;
+          seen.add(val);
+        }
+      }
+    }
+  }
+  return true;
+}
+
 function estValide(grille, ligne, col, num) {
+
   for (let i = 0; i < 9; i++) {
     if (grille[ligne][i] === num || grille[i][col] === num) {
       return false;
     }
   }
+
   let startRow = Math.floor(ligne / 3) * 3;
   let startCol = Math.floor(col / 3) * 3;
   for (let i = startRow; i < startRow + 3; i++) {
@@ -192,6 +252,23 @@ function estValide(grille, ligne, col, num) {
 }
 
 function resoudreSudoku(grille) {
+
+  let foundZero = false;
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      if (grille[row][col] === 0) {
+        foundZero = true;
+        break;
+      }
+    }
+    if (foundZero) break;
+  }
+
+  if (!foundZero) {
+    return grilleEstCompleteEtValide(grille);
+  }
+
+
   for (let ligne = 0; ligne < 9; ligne++) {
     for (let col = 0; col < 9; col++) {
       if (grille[ligne][col] === 0) {
@@ -201,9 +278,10 @@ function resoudreSudoku(grille) {
             if (resoudreSudoku(grille)) {
               return true;
             }
-            grille[ligne][col] = 0; // Backtrack
+            grille[ligne][col] = 0;
           }
         }
+        // Impossible de placer un nombre => échec
         return false;
       }
     }
@@ -227,7 +305,7 @@ module.exports = {
   my_display_unicode_t,
   quickSort,
   tspBrutForce,
-  permuter,           // pour tester séparément si besoin
+  permuter,
   resoudreSudoku,
-  estValide           // pour tester séparément si besoin
+  estValide,
 };
